@@ -136,15 +136,21 @@ def read_parcels(path: Path, wanted: set[str]) -> dict[str, dict]:
         yr = clean(r.get("TAXYR"))
         if pid in out and out[pid][0] >= yr:
             continue
-        parts = [clean(r.get(k)) for k in ("ADRNO", "ADRADD", "ADRDIR", "ADRSTR", "ADRSUF", "ADRSUF2")]
+        parts = [clean(r.get(k)) for k in ("ADRNO", "ADRADD", "ADRDIR", "ADRSTR", "ADRSUF")]
         addr = " ".join(p for p in parts if p)
         if not re.match(r"^\d", addr):
             addr = ""
+        # The file's header is misaligned after column 40: the ZIP is under "USER2" and
+        # the city under "UDATE1" (checked against the 30-OCT-2026 file). Fall back to the
+        # labelled columns if a later file fixes the header.
+        zipc = next((z for z in (clean(r.get("USER2")), clean(r.get("ZIPCD")))
+                     if re.fullmatch(r"\d{5}(-\d{4})?", z)), "")
+        city = next((c for c in (clean(r.get("UDATE1")), clean(r.get("CITY")))
+                     if c and not re.search(r"\d", c)), "")
         out[pid] = (yr, {
             "property_address": addr,
-            "property_zip": clean(r.get("ZIPCD"))[:5],
-            "property_city": clean(r.get("CITY")).title(),
-            "rental_registered": clean(r.get("Rental_Registration")).upper() in ("Y", "YES", "1", "TRUE", "R"),
+            "property_zip": zipc[:5],
+            "property_city": city.title(),
             "luc": clean(r.get("LUC")),
         })
     return {k: v for k, (_, v) in out.items()}

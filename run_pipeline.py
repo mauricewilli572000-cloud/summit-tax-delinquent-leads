@@ -98,7 +98,6 @@ def main(argv=None) -> int:
         lead.amount_owed = r["delinquent_amount"]
         lead.market_value = round(r["taxable_value"] / config.ASSESSMENT_RATIO) if r["taxable_value"] else None
         lead.has_mortgage = r["has_mortgage"]
-        lead.rental_registered = p.get("rental_registered", False)
         lead.lead_type = config.LEAD_TYPE
         lead.county = config.COUNTY
         lead.source_url = links[config.DELQ_PREFIX]
