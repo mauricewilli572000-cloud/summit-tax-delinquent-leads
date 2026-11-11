@@ -20,3 +20,9 @@ def test_parcel_file_fills_property_address():
     p = source.read_parcels(FX / "SC705_PARDAT.CSV", {"0101379", "0102701"})
     assert p["0101379"]["property_address"] == "122 JOSEPH AVE"          # latest tax year wins
     assert (p["0102701"]["property_zip"], p["0102701"]["property_city"]) == ("44203", "Barberton")
+
+
+def test_district_city():
+    assert source.district_city("AKRON CITY-AKRON CSD") == "Akron"
+    assert source.district_city("AKRON CITY AKRON CSD") == "Akron"
+    assert source.district_city("COPLEY TWP-REVERE LSD") == "Copley Twp"

@@ -86,6 +86,14 @@ def norm_parcel(p: str) -> str:
     return d.zfill(7) if d else ""
 
 
+def district_city(district: str) -> str:
+    """'AKRON CITY-AKRON CSD' / 'AKRON CITY AKRON CSD' -> 'Akron'; 'COPLEY TWP-REVERE LSD' -> 'Copley Twp'."""
+    d = re.split(r"\s*-\s*", clean(district).upper())[0]
+    d = re.sub(r"\s+\S+\s+(CSD|LSD|EVSD|SD)$", "", d)
+    d = re.sub(r"\s+(CITY|VIL|VILLAGE)$", "", d)
+    return d.strip().title()
+
+
 def read_delinquent(path: Path) -> tuple[dict[str, dict], str]:
     """SC720_DELQ.csv -> ({parcel: record}, tape date)."""
     out, tape = {}, ""
@@ -114,8 +122,7 @@ def read_delinquent(path: Path) -> tuple[dict[str, dict], str]:
             "mailing_address": mail[0].strip(" ,"), "mailing_city": mail[1], "mailing_state": mail[2],
             "mailing_zip": mail[3][:5],
             "property_address": clean(r.get("PROPERTY_ADDRESS")),
-            "district_city": re.split(r"[-]", district)[0].replace(" CITY", "").replace(" VIL", "")
-                             .replace(" TWP", " TWP").strip().title() if district else "",
+            "district_city": district_city(district),
             "land_use": clean(r.get("LUC")),
             "tax_year": clean(r.get("CERTIFIED_YR")),
             "delinquent_amount": round(amt, 2),
